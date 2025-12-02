@@ -1,6 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MOCK_INFLUENCERS } from '../constants';
 
+// Declare process to avoid TS errors if @types/node isn't picked up immediately in the CI environment
+declare const process: { env: { API_KEY: string } };
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // 1. Generate Bio
@@ -15,7 +18,9 @@ export const generateBio = async (role: string, keywords: string, tone: string =
       contents: prompt,
     });
     
-    return response.text.trim();
+    // Handle potential undefined text
+    const text = response.text;
+    return text ? text.trim() : "Passionate content creator ready to collaborate.";
   } catch (error) {
     console.error("Gemini Bio Generation Error:", error);
     return "Passionate content creator ready to collaborate with like-minded brands.";
@@ -63,7 +68,11 @@ export const smartMatchInfluencers = async (query: string): Promise<string[]> =>
       }
     });
 
-    const result = JSON.parse(response.text);
+    // Handle potential undefined text
+    const text = response.text;
+    if (!text) return [];
+
+    const result = JSON.parse(text);
     return result.matchIds || [];
   } catch (error) {
     console.error("Gemini Match Error:", error);
@@ -84,7 +93,10 @@ export const getChatReplySuggestion = async (lastMessage: string, myRole: string
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
-        return response.text.trim();
+        
+        // Handle potential undefined text
+        const text = response.text;
+        return text ? text.trim() : "";
     } catch (e) {
         return "";
     }
