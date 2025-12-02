@@ -1,14 +1,25 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MOCK_INFLUENCERS } from '../constants';
 
-// Declare process to avoid TS errors if @types/node isn't picked up immediately in the CI environment
+// Declare process for TS (runtime handled by Vite define or window polyfill)
 declare const process: { env: { API_KEY: string } };
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization of the AI client
+const getAiClient = () => {
+  // Use process.env.API_KEY directly as per guidelines
+  if (!process.env.API_KEY) {
+    console.warn("Gemini API Key is missing. AI features will use fallback mock data.");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
 // 1. Generate Bio
 export const generateBio = async (role: string, keywords: string, tone: string = "professional"): Promise<string> => {
   try {
+    const ai = getAiClient();
+    if (!ai) return "Passionate content creator ready to collaborate. (AI Key Missing)";
+
     const prompt = `Write a short, engaging ${tone} bio (max 280 chars) for a ${role} profile on a marketplace. 
     Keywords/Niches: ${keywords}. 
     Focus on value proposition and personality. No hashtags.`;
@@ -18,7 +29,6 @@ export const generateBio = async (role: string, keywords: string, tone: string =
       contents: prompt,
     });
     
-    // Handle potential undefined text
     const text = response.text;
     return text ? text.trim() : "Passionate content creator ready to collaborate.";
   } catch (error) {
@@ -30,6 +40,9 @@ export const generateBio = async (role: string, keywords: string, tone: string =
 // 2. Smart Match (Semantic Search)
 export const smartMatchInfluencers = async (query: string): Promise<string[]> => {
   try {
+    const ai = getAiClient();
+    if (!ai) return [];
+
     const influencersLite = MOCK_INFLUENCERS.map(inf => ({
       id: inf.id,
       name: inf.name,
@@ -63,12 +76,12 @@ export const smartMatchInfluencers = async (query: string): Promise<string[]> =>
               type: Type.ARRAY,
               items: { type: Type.STRING }
             }
-          }
+          },
+          propertyOrdering: ["matchIds"]
         }
       }
     });
 
-    // Handle potential undefined text
     const text = response.text;
     if (!text) return [];
 
@@ -83,6 +96,9 @@ export const smartMatchInfluencers = async (query: string): Promise<string[]> =>
 // 3. Chat Suggestion
 export const getChatReplySuggestion = async (lastMessage: string, myRole: string): Promise<string> => {
     try {
+        const ai = getAiClient();
+        if (!ai) return "";
+
         const prompt = `
         You are assisting a ${myRole} in a professional chat.
         The last message received was: "${lastMessage}".
@@ -94,7 +110,6 @@ export const getChatReplySuggestion = async (lastMessage: string, myRole: string
             contents: prompt,
         });
         
-        // Handle potential undefined text
         const text = response.text;
         return text ? text.trim() : "";
     } catch (e) {

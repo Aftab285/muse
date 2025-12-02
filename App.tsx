@@ -9,6 +9,7 @@ import { ProfilePage } from './pages/Profile';
 import { ChatPage } from './pages/Chat';
 import { StyleGuide } from './pages/StyleGuide';
 import { UserRole } from './types';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 interface ProtectedRouteProps {
   isAuthenticated: boolean;
@@ -36,40 +37,42 @@ const App: React.FC = () => {
   };
 
   return (
-    <HashRouter>
-        <Layout userRole={userRole} onLogout={handleLogout}>
-            <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/onboarding" element={<Onboarding setUserRole={handleLogin} />} />
-                
-                <Route path="/dashboard" element={
-                    <ProtectedRoute isAuthenticated={isAuthenticated}>
-                        <Dashboard userRole={userRole} />
-                    </ProtectedRoute>
-                } />
-                <Route path="/search" element={
-                    <ProtectedRoute isAuthenticated={isAuthenticated}>
-                        <SearchPage />
-                    </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                    <ProtectedRoute isAuthenticated={isAuthenticated}>
-                        <ProfilePage />
-                    </ProtectedRoute>
-                } />
-                <Route path="/messages" element={
-                    <ProtectedRoute isAuthenticated={isAuthenticated}>
-                        <ChatPage userRole={userRole} />
-                    </ProtectedRoute>
-                } />
-                <Route path="/styleguide" element={
-                    <ProtectedRoute isAuthenticated={isAuthenticated}>
-                        <StyleGuide />
-                    </ProtectedRoute>
-                } />
-            </Routes>
-        </Layout>
-    </HashRouter>
+    <ErrorBoundary>
+        <HashRouter>
+            <Layout userRole={userRole} onLogout={handleLogout}>
+                <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/onboarding" element={<Onboarding setUserRole={handleLogin} />} />
+                    
+                    <Route path="/dashboard" element={
+                        <ProtectedRoute isAuthenticated={isAuthenticated}>
+                            <Dashboard userRole={userRole} />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/search" element={
+                        <ProtectedRoute isAuthenticated={isAuthenticated}>
+                            <SearchPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                        <ProtectedRoute isAuthenticated={isAuthenticated}>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/messages" element={
+                        <ProtectedRoute isAuthenticated={isAuthenticated}>
+                            <ChatPage userRole={userRole} />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/styleguide" element={
+                        <ProtectedRoute isAuthenticated={isAuthenticated}>
+                            <StyleGuide />
+                        </ProtectedRoute>
+                    } />
+                </Routes>
+            </Layout>
+        </HashRouter>
+    </ErrorBoundary>
   );
 };
 
